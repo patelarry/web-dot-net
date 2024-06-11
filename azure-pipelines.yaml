@@ -1,90 +1,43 @@
-# # Azure Pipeline configuration for .NET project
-# trigger:
-# - main
-
-# pool:
-#    vmImage: 'windows-latest'
-
-# variables:
-#   BuildConfiguration: 'Release'
-#   RestoreBuildProjects: '**/*.csproj'
-
-# steps:
-# # Step 1: Checkout the code from the repository
-# - checkout: self
-
-# # Step 2: Restore dependencies
-# - task: DotNetCoreCLI@2
-#   displayName: 'Restore'
-#   inputs:
-#     command: 'restore'
-#     projects: '$(RestoreBuildProjects)'
-
-# # Step 3: Build the project
-# - task: DotNetCoreCLI@2
-#   displayName: 'Build'
-#   inputs:
-#     command: 'build'
-#     projects: '$(RestoreBuildProjects)'
-#     arguments: '--configuration $(BuildConfiguration)'
-
-# # Step 4: Publish the project
-# - task: DotNetCoreCLI@2
-#   displayName: 'Publish'
-#   inputs:
-#     command: 'publish'
-#     publishWebProjects: True
-#     arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-#     zipAfterPublish: True
-
-# # Step 5: Publish build artifacts
-# - task: PublishBuildArtifacts@1
-#   displayName: 'Publish Artifact'
-#   inputs:
-#     PathtoPublish: '$(build.artifactstagingdirectory)'
-#   condition: succeededOrFailed()
-
--------------------------------------------------------------------------------------------------
-
-
 # Azure Pipeline configuration for .NET project
 trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'
+   vmImage: 'windows-latest'
 
-# Variables to be set at queue time
 variables:
   BuildConfiguration: 'Release'
   RestoreBuildProjects: '**/*.csproj'
 
 steps:
-# Step 1: Restore dependencies
+# Step 1: Checkout the code from the repository
+- checkout: self
+
+# Step 2: Restore dependencies
 - task: DotNetCoreCLI@2
-  displayName: Restore
+  displayName: 'Restore'
   inputs:
-    command: restore
+    command: 'restore'
     projects: '$(RestoreBuildProjects)'
 
-# Step 2: Build the project
+# Step 3: Build the project
 - task: DotNetCoreCLI@2
-  displayName: Build
+  displayName: 'Build'
   inputs:
-    command: build
+    command: 'build'
     projects: '$(RestoreBuildProjects)'
     arguments: '--configuration $(BuildConfiguration)'
 
-# Step 3: Publish the project
+# Step 4: Publish the project
 - task: DotNetCoreCLI@2
-  displayName: Publish
+  displayName: 'Publish'
   inputs:
-    command: publish
+    command: 'publish'
     publishWebProjects: True
     arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
     zipAfterPublish: True
 
-# Step 4: Publish build artifacts
+# Step 5: Publish build artifacts
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact'
   inputs:
@@ -92,4 +45,4 @@ steps:
   condition: succeededOrFailed()
 
 
- 
+
