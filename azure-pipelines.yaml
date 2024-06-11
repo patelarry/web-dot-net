@@ -44,50 +44,52 @@
 #     PathtoPublish: '$(build.artifactstagingdirectory)'
 #   condition: succeededOrFailed()
 
+-------------------------------------------------------------------------------------------------
+
 
 # Azure Pipeline configuration for .NET project
- trigger:
+trigger:
 - main
 
-  pool:
-    vmImage: 'windows-latest'
+pool:
+  vmImage: 'windows-latest'
 
- # Variables to be set at queue time
-  variables:
-    BuildConfiguration: 'Release'
-    RestoreBuildProjects: '**/*.csproj'
+# Variables to be set at queue time
+variables:
+  BuildConfiguration: 'Release'
+  RestoreBuildProjects: '**/*.csproj'
 
-  steps:
-  # Step 1: Restore dependencies
- - task: DotNetCoreCLI@2
-    displayName: Restore
-    inputs:
-      command: restore
-      projects: '$(RestoreBuildProjects)'
+steps:
+# Step 1: Restore dependencies
+- task: DotNetCoreCLI@2
+  displayName: Restore
+  inputs:
+    command: restore
+    projects: '$(RestoreBuildProjects)'
 
-  # Step 2: Build the project
-  - task: DotNetCoreCLI@2
-    displayName: Build
-    inputs:
-      command: build
-      projects: '$(RestoreBuildProjects)'
-     arguments: '--configuration $(BuildConfiguration)'
+# Step 2: Build the project
+- task: DotNetCoreCLI@2
+  displayName: Build
+  inputs:
+    command: build
+    projects: '$(RestoreBuildProjects)'
+    arguments: '--configuration $(BuildConfiguration)'
 
- # Step 3: Publish the project
- - task: DotNetCoreCLI@2
-    displayName: Publish
-    inputs:
-      command: publish
-      publishWebProjects: True
-      arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-      zipAfterPublish: True
+# Step 3: Publish the project
+- task: DotNetCoreCLI@2
+  displayName: Publish
+  inputs:
+    command: publish
+    publishWebProjects: True
+    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+    zipAfterPublish: True
 
-  # Step 4: Publish build artifacts
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact'
-   inputs:
-     PathtoPublish: '$(build.artifactstagingdirectory)'
-    condition: succeededOrFailed()
+# Step 4: Publish build artifacts
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
 
 
  
