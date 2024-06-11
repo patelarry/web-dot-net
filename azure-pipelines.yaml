@@ -1,45 +1,81 @@
-# Azure Pipeline configuration for .NET project
+# # Azure Pipeline configuration for .NET project
+# trigger:
+# - main
+
+# pool:
+#   name: Azure Pipelines
+
+# variables:
+#   BuildConfiguration: 'Release'
+#   RestoreBuildProjects: '**/*.csproj'
+
+# steps:
+# # Step 1: Checkout the code from the repository
+# - checkout: self
+
+# # Step 2: Restore dependencies
+# - task: DotNetCoreCLI@2
+#   displayName: 'Restore'
+#   inputs:
+#     command: 'restore'
+#     projects: '$(RestoreBuildProjects)'
+
+# # Step 3: Build the project
+# - task: DotNetCoreCLI@2
+#   displayName: 'Build'
+#   inputs:
+#     command: 'build'
+#     projects: '$(RestoreBuildProjects)'
+#     arguments: '--configuration $(BuildConfiguration)'
+
+# # Step 4: Publish the project
+# - task: DotNetCoreCLI@2
+#   displayName: 'Publish'
+#   inputs:
+#     command: 'publish'
+#     publishWebProjects: True
+#     arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+#     zipAfterPublish: True
+
+# # Step 5: Publish build artifacts
+# - task: PublishBuildArtifacts@1
+#   displayName: 'Publish Artifact'
+#   inputs:
+#     PathtoPublish: '$(build.artifactstagingdirectory)'
+#   condition: succeededOrFailed()
+
+
+
+
 trigger:
 - main
 
 pool:
-  name: Azure Pipelines
+  vmImage: 'windows-latest'
 
 variables:
-  BuildConfiguration: 'Release'
-  RestoreBuildProjects: '**/*.csproj'
+  buildConfiguration: 'Release'
 
 steps:
-# Step 1: Checkout the code from the repository
-- checkout: self
+# Step 1: Install .NET Core SDK
+- task: UseDotNet@2
+  displayName: 'Install .NET Core SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '8.x'
+    installationPath: $(Agent.ToolsDirectory)/dotnet
 
 # Step 2: Restore dependencies
 - task: DotNetCoreCLI@2
   displayName: 'Restore'
   inputs:
     command: 'restore'
-    projects: '$(RestoreBuildProjects)'
+    feedsToUse: 'select'
+    vstsFeed: 'my-vsts-feed'  # Replace with your feed identifier
 
 # Step 3: Build the project
 - task: DotNetCoreCLI@2
   displayName: 'Build'
   inputs:
     command: 'build'
-    projects: '$(RestoreBuildProjects)'
-    arguments: '--configuration $(BuildConfiguration)'
-
-# Step 4: Publish the project
-- task: DotNetCoreCLI@2
-  displayName: 'Publish'
-  inputs:
-    command: 'publish'
-    publishWebProjects: True
-    arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-    zipAfterPublish: True
-
-# Step 5: Publish build artifacts
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish Artifact'
-  inputs:
-    PathtoPublish: '$(build.artifactstagingdirectory)'
-  condition: succeededOrFailed()
+    arguments: '--configuration $(buildConfiguration)'
