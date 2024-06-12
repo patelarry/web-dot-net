@@ -130,7 +130,7 @@ stages:
             displayName: 'Azure Web App Deploy'
             inputs:
               ConnectionType: 'AzureRM'
-              azureSubscription: 'Free Trial(c76eba7d-3791-4b1a-ac0a-e3914e169a45)'
+              azureSubscription: 'Free Trial (c76eba7d-3791-4b1a-ac0a-e3914e169a45)'
               appType: 'webApp'
               WebAppName: 'aryanproject'
               packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
