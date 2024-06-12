@@ -46,94 +46,119 @@
 
 
 
-# Define variables
+# Azure Pipeline configuration for .NET project
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
 variables:
   BuildConfiguration: 'Release'
   RestoreBuildProjects: '**/*.csproj'
 
-# Specify the trigger
-trigger:
-  branches:
-    include:
-      - main
-
-# Specify the pool and agent
-pool:
-  vmImage: 'windows-latest'
-
-# Define the stages
 stages:
 - stage: Build
   displayName: 'Build Stage'
   jobs:
-  - job: BuildJob
-    displayName: 'Build Job'
-    steps:
-    # Step 1: Checkout the code from the repository
-    - checkout: self
-      displayName: 'Checkout Code'
+    - job: BuildJob
+      displayName: 'Build Job'
+      steps:
+        # Step 1: Checkout the code from the repository
+        - checkout: self
+          displayName: 'Checkout Code'
 
-    # Step 2: Restore dependencies
-    - task: DotNetCoreCLI@2
-      displayName: 'Restore'
-      inputs:
-        command: 'restore'
-        projects: '$(RestoreBuildProjects)'
+        # Step 2: Restore dependencies
+        - task: DotNetCoreCLI@2
+          displayName: 'Restore'
+          inputs:
+            command: 'restore'
+            projects: '$(RestoreBuildProjects)'
 
-    # Step 3: Build the project
-    - task: DotNetCoreCLI@2
-      displayName: 'Build'
-      inputs:
-        command: 'build'
-        projects: '$(RestoreBuildProjects)'
-        arguments: '--configuration $(BuildConfiguration)'
+        # Step 3: Build the project
+        - task: DotNetCoreCLI@2
+          displayName: 'Build'
+          inputs:
+            command: 'build'
+            projects: '$(RestoreBuildProjects)'
+            arguments: '--configuration $(BuildConfiguration)'
 
-    # Step 4: Publish the project
-    - task: DotNetCoreCLI@2
-      displayName: 'Publish'
-      inputs:
-        command: 'publish'
-        publishWebProjects: True
-        arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
-        zipAfterPublish: True
+        # Step 4: Publish the project
+        - task: DotNetCoreCLI@2
+          displayName: 'Publish'
+          inputs:
+            command: 'publish'
+            publishWebProjects: True
+            arguments: '--configuration $(BuildConfiguration) --output $(build.artifactstagingdirectory)'
+            zipAfterPublish: True
 
-    # Step 5: Publish build artifacts
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish Artifact'
-      inputs:
-        PathtoPublish: '$(build.artifactstagingdirectory)'
-        ArtifactName: 'drop'
-        publishLocation: 'Container'
-      condition: succeededOrFailed()
+        # Step 5: Publish build artifacts
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Artifact'
+          inputs:
+            PathtoPublish: '$(build.artifactstagingdirectory)'
+          condition: succeededOrFailed()
 
-- stage: Deploy
-  displayName: 'Deploy Stage'
+- stage: DeployToDev
+  displayName: 'Deploy to Dev Stage'
   dependsOn: Build
   condition: succeeded()
   jobs:
-  - deployment: DeployJob
-    displayName: 'Deploy Job'
-    environment: 'mydev'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          # Download artifacts
-          - task: DownloadPipelineArtifact@2
-            displayName: 'Download Build Artifacts'
-            inputs:
-              artifact: 'drop'
-              path: '$(System.ArtifactsDirectory)'
+    - deployment: DeployJob
+      displayName: 'Deploy to Dev Job'
+      environment: 'mydev'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            # Download artifacts
+            - task: DownloadPipelineArtifact@2
+              displayName: 'Download Build Artifacts'
+              inputs:
+                artifact: 'drop'
+                path: '$(System.ArtifactsDirectory)'
 
-          # Azure Web App Deployment
-          - task: AzureRmWebAppDeployment@4
-            displayName: 'Azure Web App Deploy'
-            inputs:
-              ConnectionType: 'AzureRM'
-              azureSubscription: 'Free Trial (c76eba7d-3791-4b1a-ac0a-e3914e169a45)'
-              appType: 'webApp'
-              WebAppName: 'aryanproject'
-              packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
+            # Azure Web App Deployment
+            - task: AzureRmWebAppDeployment@4
+              displayName: 'Azure Web App Deploy'
+              inputs:
+                ConnectionType: 'AzureRM'
+                azureSubscription: 'Free Trial (c76eba7d-3791-4b1a-ac0a-e3914e169a45)'
+                appType: 'webApp'
+                WebAppName: 'aryanproject'
+                packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
 
-          # Placeholder for additional deployment steps
-          - script: echo 'Deploying...'
+            # Placeholder for additional deployment steps
+            - script: echo 'Deploying...'
+
+- stage: DeployToProd
+  displayName: 'Deploy to Prod Stage'
+  dependsOn: DeployToDev
+  condition: succeeded()
+  jobs:
+    - deployment: DeployJob
+      displayName: 'Deploy to Prod Job'
+      environment: 'myprod'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+            # Download artifacts
+            - task: DownloadPipelineArtifact@2
+              displayName: 'Download Build Artifacts'
+              inputs:
+                artifact: 'drop'
+                path: '$(System.ArtifactsDirectory)'
+
+            # Azure Web App Deployment to Prod
+            - task: AzureRmWebAppDeployment@4
+              displayName: 'Azure Web App Deploy to Prod'
+              inputs:
+                ConnectionType: 'AzureRM'
+                azureSubscription: 'Free Trial (c76eba7d-3791-4b1a-ac0a-e3914e169a45)'
+                appType: 'webApp'
+                WebAppName: 'aryanproject'
+                packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
+
+            # Placeholder for additional deployment steps
+            - script: echo 'Deploying to Prod...'
